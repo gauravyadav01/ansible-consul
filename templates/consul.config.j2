@@ -1,0 +1,9 @@
+{{ 
+  {
+    'bind_addr': '0.0.0.0',
+    'data_dir': consul_data_dir,
+    'client_addr': '0.0.0.0'
+  } | combine(consul_config) 
+    | to_nice_json(indent=2)
+}}
+

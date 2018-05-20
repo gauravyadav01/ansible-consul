@@ -1,0 +1,32 @@
+---
+# defaults file for gaurav.consul
+consul_epel_repo: true
+consul_config: {}
+
+consul_version: 1.0.0
+consul_archive: "consul_{{ consul_version }}_linux_amd64.zip"
+consul_download_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_archive }}"
+
+consul_group: consul
+consul_user: consul
+consul_home: /opt/consul
+
+consul_config_dir: /etc/consul.d
+consul_data_dir: "{{ consul_home }}/data"
+consul_config_file: "{{ consul_config_dir }}/config.json"
+consul_managed_files:
+  - config.json
+
+consul_manage_service: true
+consul_use_systemd: true
+consul_systemd_template: "consul.systemd.j2"
+consul_config_template: "consul.config.j2"
+
+consul_service_state: started
+
+# Define Consul services to add to /etc/consul.d/*
+consul_services: {}
+consul_services_mode: 0640
+
+# Security
+consul_encrypt: ""

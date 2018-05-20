@@ -1,0 +1,17 @@
+---
+# Task related to RedHat
+- name: add epel repo
+  yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    gpgcheck: no
+  when: consul_epel_repo 
+
+- name: install deps (RHEL)
+  yum:
+    pkg: "{{item}}"
+    state: installed
+  with_items:
+    - unzip
+  when: ansible_os_family == "RedHat"

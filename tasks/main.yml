@@ -1,0 +1,81 @@
+---
+# tasks file for gaurav.consul
+- include: setup-RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- include: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- name: download and install consul
+  unarchive:
+    src: "{{ consul_download_url }}"
+    dest: /usr/local/bin
+    copy: no
+
+- name: create consul group
+  group:
+    name: "{{consul_group}}"
+    state: present
+    system: yes
+  register: consul_group_created
+
+- name: create consul user
+  user:
+    home: "{{consul_home}}"
+    name: "{{consul_user}}"
+    group: "{{consul_group}}"
+    system: yes
+  when: consul_group_created|changed
+
+- name: create consul directory
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: "{{consul_user}}"
+    group: "{{consul_group}}"
+    mode: 0755
+  with_items:
+    - "{{ consul_home }}"
+    - "{{ consul_data_dir }}"
+    - "{{ consul_config_dir }}"
+
+- name: find files in "{{ consul_config_dir }}"
+  shell: ls -1 "{{ consul_config_dir }}"
+  register: contents
+
+- name: delete all unmanaged files
+  file:
+    path: "{{ consul_config_dir }}/{{ item }}"
+    state: absent
+  with_items: "{{ contents.stdout_lines | difference(consul_managed_files) }}"
+
+- name: copy consul systemd script
+  template:
+    src: "{{ consul_systemd_template }}"
+    dest: "/etc/systemd/system/consul.service"
+    owner: root
+    group: root
+    mode: 0644
+  when: consul_use_systemd
+  notify:
+    - reload systemd
+    - restart consul
+
+- name: copy consul config
+  template:
+    src: "{{ consul_config_template }}"
+    dest: "{{ consul_config_dir }}/config.json"
+  notify:
+    - restart consul
+
+- name: enable consul service
+  service:
+    name: consul
+    enabled: yes
+
+- name: start consul service
+  service:
+    name: consul
+    state: "{{ consul_service_state }}"
+
+- { include: services.yml, when: consul_services is defined and consul_services|length > 0 }

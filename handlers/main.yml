@@ -1,0 +1,9 @@
+---
+# handlers file for gaurav.consul
+- name: reload systemd
+  become: yes
+  command: systemctl daemon-reload
+
+- name: restart consul
+  action: service name=consul state=restarted enabled=yes
+  when: consul_manage_service
